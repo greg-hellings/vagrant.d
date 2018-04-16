@@ -83,6 +83,14 @@ def get_image(base_box)
 		return 'Fedora-Cloud-Base-24-compose-latest'
 	elsif base_box == 'fedora/27-cloud-base'
 		return 'Fedora-Cloud-Base-27-1.6'
+	elsif base_box == 'rhel7.2'
+		return 'rhel-7.2-server-x86_64-updated'
+	elsif base_box == 'rhel7.3'
+		return 'rhel-7.3-server-x86_64-updated'
+	elsif base_box == 'rhel7.4'
+		return 'rhel-7.4-server-x86_64-updated'
+	elsif base_box == 'rhel6'
+		return 'rhel-6.9-server-x86_64-updated'
 	end
 end
 
