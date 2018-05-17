@@ -9,7 +9,7 @@
 # Vagrant.configure('2') do config
 #   vm(config, "myhost")
 # end
-def vm(config, name, base_box='fedora/27-cloud-base')
+def vm(config, name, base_box='fedora/28-cloud-base')
 	config.vm.define name do |node|
 		node.vm.provider :libvirt do |libvirt, override|
 			local_setup(override, base_box)
@@ -83,6 +83,8 @@ def get_image(base_box)
 		return 'Fedora-Cloud-Base-24-compose-latest'
 	elsif base_box == 'fedora/27-cloud-base'
 		return 'Fedora-Cloud-Base-27-1.6'
+	elsif base_box == 'fedora/28-cloud-base'
+		return 'Fedora-Cloud-Base-28-compose-latest'
 	elsif base_box == 'rhel7.2'
 		return 'rhel-7.2-server-x86_64-updated'
 	elsif base_box == 'rhel7.3'
