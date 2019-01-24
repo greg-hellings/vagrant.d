@@ -1,6 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Required for reading clouds.yaml config file
+require 'yaml'
+
 # This is the basic entry-point method here. You can use this
 # to just create vms ad nauseum in your Vagrantfile. From within
 # your main Vagrantfile configuration block, just call to this
@@ -9,7 +12,7 @@
 # Vagrant.configure('2') do config
 #   vm(config, "myhost")
 # end
-def vm(config, name, base_box='fedora/28-cloud-base')
+def vm(config, name, base_box='fedora/29-cloud-base')
 	config.vm.define name do |node|
 		node.vm.provider :libvirt do |libvirt, override|
 			local_setup(override, base_box)
@@ -85,12 +88,16 @@ def get_image(base_box)
 		return 'Fedora-Cloud-Base-27-1.6'
 	elsif base_box == 'fedora/28-cloud-base'
 		return 'Fedora-Cloud-Base-28-compose-latest'
+	elsif base_box == 'fedora/29-cloud-base'
+		return 'Fedora 29'
 	elsif base_box == 'rhel7.2'
 		return 'rhel-7.2-server-x86_64-updated'
 	elsif base_box == 'rhel7.3'
 		return 'rhel-7.3-server-x86_64-updated'
 	elsif base_box == 'rhel7.4'
 		return 'rhel-7.4-server-x86_64-updated'
+	elsif base_box == 'generic/rhel8'
+		return 'rhel-8.0-x86_64-latest'
 	elsif base_box == 'rhel6'
 		return 'rhel-6.9-server-x86_64-updated'
 	end
@@ -104,13 +111,30 @@ end
 # configure auth
 Vagrant.configure("2") do |config|
 	config.vm.provider :openstack do |os, override|
-		os.openstack_auth_url = ENV['OS_AUTH_URL']
-		os.username = ENV['OS_USERNAME']
-		os.password = ENV['OS_PASSWORD']
-		os.tenant_name = ENV['OS_PROJECT_NAME']
-		os.flavor = ENV['OS_NOVA_FLAVOR']
-		os.floating_ip_pool = ENV['OS_FLOATING_NETWORK']
-		os.networks = [{ name: ENV['OS_NETWORK'] }]
+		clouds = YAML.load_file(ENV['HOME'] + '/.config/openstack/clouds.yaml')
+		cloud = clouds['clouds']['default']
+		if ENV.key?('OS_CLOUD')
+			cloud = clouds['clouds'][ENV['OS_CLOUD']]
+		end
+		os.openstack_auth_url = cloud['auth']['auth_url']
+		os.username = cloud['auth']['username']
+		os.password = cloud['auth']['password']
+		os.flavor = cloud['nova_flavor']
+		os.networks = cloud['networks']
 		os.server_create_timeout = 900
+		if cloud.key?('floating_network')
+			os.floating_ip_pool = cloud['floating_network']
+		end
+		if cloud['auth'].key?('user_domain_name')
+			os.user_domain_name = cloud['auth']['user_domain_name']
+		end
+		if cloud['auth'].key?('project_name')
+			os.tenant_name = cloud['auth']['project_name']
+			os.project_name = cloud['auth']['project_name']
+			os.project_domain_name = cloud['auth']['project_domain_name']
+		end
+		if cloud.key?('identity_api_version')
+			os.identity_api_version = cloud['identity_api_version'].to_s
+		end
 	end
 end
