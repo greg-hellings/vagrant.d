@@ -88,6 +88,8 @@ def get_image(base_box)
 		return 'Fedora-Cloud-Base-27-1.6'
 	elsif base_box == 'fedora/28-cloud-base'
 		return 'Fedora-Cloud-Base-28-compose-latest'
+	elsif base_box == 'fedora/29-cloud-base'
+		return 'Fedora 29'
 	elsif base_box == 'rhel7.2'
 		return 'rhel-7.2-server-x86_64-updated'
 	elsif base_box == 'rhel7.3'
@@ -108,12 +110,12 @@ end
 # then you can just run "vagrant --provider openstack up" and this will auto
 # configure auth
 Vagrant.configure("2") do |config|
-	clouds = YAML.load_file(ENV['HOME'] + '/.config/openstack/clouds.yaml')
-	cloud = clouds['clouds']['default']
-	if ENV.key?('OS_CLOUD')
-		cloud = clouds['clouds'][ENV['OS_CLOUD']]
-	end
 	config.vm.provider :openstack do |os, override|
+		clouds = YAML.load_file(ENV['HOME'] + '/.config/openstack/clouds.yaml')
+		cloud = clouds['clouds']['default']
+		if ENV.key?('OS_CLOUD')
+			cloud = clouds['clouds'][ENV['OS_CLOUD']]
+		end
 		os.openstack_auth_url = cloud['auth']['auth_url']
 		os.username = cloud['auth']['username']
 		os.password = cloud['auth']['password']
