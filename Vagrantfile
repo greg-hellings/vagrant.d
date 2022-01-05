@@ -1,5 +1,5 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vi: ft=ruby:noexpandtab:ts=4
 
 # Required for reading clouds.yaml config file
 require 'yaml'
@@ -12,7 +12,7 @@ require 'yaml'
 # Vagrant.configure('2') do config
 #   vm(config, "myhost")
 # end
-def vm(config, name, base_box='fedora/29-cloud-base')
+def vm(config, name, base_box='generic/fedora35')
 	config.vm.define name do |node|
 		node.vm.provider :libvirt do |libvirt, override|
 			local_setup(override, base_box)
@@ -46,11 +46,14 @@ end
 # to the playbook in your repository that ought to be run. If there
 # are muliple playbooks that need to be run, in succession, you
 # should be able to call this method multiple times
-def ansible(config, book='../../playbooks/site.yml')
+def ansible(config, book=ENV['HOME'] + '/src/ansible_collections/devroles/system/playbooks/workstation.yml')
 	config.vm.provision :ansible do |ansible|
 		ansible.limit = "all"
 		ansible.verbose = "-v"
 		ansible.playbook = book
+		ansible.groups = {
+		  	"admin" => config.vm.defined_vms.keys
+		}
 		yield ansible if block_given?
 	end
 end
@@ -90,6 +93,8 @@ def get_image(base_box)
 		return 'Fedora-Cloud-Base-28-compose-latest'
 	elsif base_box == 'fedora/29-cloud-base'
 		return 'Fedora 29'
+	elsif base_box == 'generic/fedora35'
+		return 'Fedora-Cloud-Base-35'
 	elsif base_box == 'rhel7.2'
 		return 'rhel-7.2-server-x86_64-updated'
 	elsif base_box == 'rhel7.3'
@@ -120,7 +125,7 @@ Vagrant.configure("2") do |config|
 		os.username = cloud['auth']['username']
 		os.password = cloud['auth']['password']
 		os.flavor = cloud['nova_flavor']
-		os.networks = cloud['networks']
+		os.networks = cloud['networks'].map{ |net| net['name'] }
 		os.server_create_timeout = 900
 		if cloud.key?('floating_network')
 			os.floating_ip_pool = cloud['floating_network']
